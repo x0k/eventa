@@ -1,5 +1,3 @@
-import { IDateTime } from 'definitions/dateTime'
-
 export function leapYear (year: number) {
   return ((year % 4 === 0) && (year % 100 !== 0)) || (year % 400 === 0)
 }
@@ -40,14 +38,4 @@ export function toWeeks (milliseconds: number) {
 
 export function getTimeBetween (begin: Date, end: Date) {
   return end.getTime() - begin.getTime()
-}
-
-export function toDateTime (date: Date): IDateTime {
-  return {
-    year: date.getFullYear(),
-    month: date.getMonth(),
-    day: date.getDate(),
-    hour: date.getHours(),
-    minute: date.getMinutes()
-  }
 }

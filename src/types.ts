@@ -1,8 +1,6 @@
-import { TExpression } from 'rule-interpreter'
+export type TExpression = any[]
 
-export { TExpression }
-
-
+export type TAction = (...args: any[]) => any
 export interface IDictionary<T> {
   [key: string]: T
 }

@@ -23,3 +23,7 @@ export interface IRange<T> extends IPeriod<T> {
 }
 
 export type TValues = IDictionary<TValue>
+
+export function period<T> (start: T, end: T): IPeriod<T> {
+  return { start, end }
+}

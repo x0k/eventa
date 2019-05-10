@@ -1,20 +1,48 @@
 import { wrap, restrict } from 'iterator-wrapper'
 
-import { TExpression, TPredicate } from 'types'
+import { TExpression, TPredicate, IDictionary } from 'utils'
 
 import { buildAction } from 'actionBuilder'
 
-import {
-  IConstraints,
-  IYears,
-  IMonths,
-  IDays,
-  IHours,
-  IMinutes,
-  IConstraint
-} from './types'
+import { getMonthLength } from 'utils/dateTime'
 
-import { getMonthLength } from './dateHelper'
+interface IYears extends IDictionary<number> {
+  year: number
+}
+
+interface IMonths extends IYears {
+  month: number
+}
+
+interface IDays extends IMonths {
+  day: number
+}
+
+interface IHours extends IDays {
+  hour: number
+}
+
+interface IMinutes extends IHours {
+  minute: number
+}
+
+export interface IDateTime {
+  minute: number
+  hour: number
+  day: number
+  date: number
+  month: number
+  year: number
+}
+
+interface IConstraint {
+  step?: number | TExpression;
+  expression?: TExpression;
+}
+
+interface IConstraints {
+  [name: string]: IConstraint
+}
 
 const isNumber = <T>(data: number | T): data is number => typeof data === 'number'
 
@@ -115,16 +143,6 @@ function * minutes (incrementor: TIncrementor, condition: TPredicate<IMinutes>, 
   return value % 60
 }
 
-function toMinutes(date: Date): IMinutes {
-  return {
-    year: date.getFullYear(),
-    month: date.getMonth(),
-    day: date.getDate(),
-    hour: date.getHours(),
-    minute: date.getMinutes()
-  }
-}
-
 export function buildIterator (start: Date, end: Date, constraints: IConstraints) {
   const condition = (date: IMinutes | number) => !isNumber(date) && (
     date.year < end.getFullYear() ||
@@ -133,7 +151,6 @@ export function buildIterator (start: Date, end: Date, constraints: IConstraints
     date.hour < end.getHours() ||
     date.minute <= end.getMinutes()
   )
-  const from = toMinutes(start)
 
   const years = buildYears(constraints.year)
   const constrainedMonths = withConstraints(constraints.month, months)
@@ -146,18 +163,18 @@ export function buildIterator (start: Date, end: Date, constraints: IConstraints
       wrap<IDays | number, number, IHours>(
         wrap<IMonths | number, number, IDays>(
           wrap<IYears, number, IMonths>(
-            years(from.year),
+            years(start.getFullYear()),
             constrainedMonths,
-            from.month
+            start.getMonth()
           ),
           constrainedDays,
-          from.day
+          start.getDate()
         ),
         constrainedHours,
-        from.hour
+        start.getHours()
       ),
       constrainedMinutes,
-      from.minute
+      start.getMinutes()
     ),
     condition
   )

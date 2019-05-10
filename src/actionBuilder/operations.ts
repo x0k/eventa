@@ -1,8 +1,8 @@
 import { TOperations } from 'rule-interpreter'
 
-import { IPeriod, TPredicate } from 'types'
+import { IPeriod, TPredicate, period } from 'utils'
 
-import { dateTime, date, time, period } from 'dateTime'
+import { dateTime, date, time } from 'utils/dateTime'
 
 type THandler<T> = (value: T) => any | T
 

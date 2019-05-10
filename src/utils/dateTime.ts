@@ -1,3 +1,15 @@
+export function time (hours: number, minutes: number) {
+  return new Date(0, 0, 1, hours, minutes)
+}
+
+export function date (month: number, date: number) {
+  return new Date(0, month, date)
+}
+
+export function dateTime (year: number, month: number, date?: number, hours?: number, minutes?: number) {
+  return new Date(year, month, date, hours, minutes)
+}
+
 export function leapYear (year: number) {
   return ((year % 4 === 0) && (year % 100 !== 0)) || (year % 400 === 0)
 }

@@ -3,15 +3,7 @@ import {
   TOption,
   TExpression,
   IPeriod
-} from 'definitions'
-
-import {
-  IListedSchedule,
-  IListedEvent,
-  TListedEventConstraints,
-  ISchedule,
-  IConstraints
-} from 'definitions/schedule'
+} from 'utils'
 
 function addCondition (relation: string, expression: TExpression, condition: TExpression) {
   switch (expression.length) {

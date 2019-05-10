@@ -1,12 +1,10 @@
 import { TOperations } from 'rule-interpreter'
 
-import { IPeriod } from 'types'
+import { IPeriod, TPredicate } from 'types'
 
 import { dateTime, date, time, period } from 'dateTime'
 
 type THandler<T> = (value: T) => any | T
-
-type TPredicate<T> = (value: T) => boolean
 
 interface IMatch<T> {
   case: (predicate: (value: T) => boolean, handler: THandler<T>) => IMatch<T>

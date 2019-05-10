@@ -1,6 +1,8 @@
 export type TExpression = any[]
 
 export type TAction = (...args: any[]) => any
+
+export type TPredicate<T> = (value: T) => boolean
 export interface IDictionary<T> {
   [key: string]: T
 }

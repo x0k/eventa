@@ -1,10 +1,12 @@
 import { wrap, restrict } from 'iterator-wrapper'
 
-import { TExpression, TPredicate, IDictionary } from 'utils'
-
-import { buildAction } from 'actionBuilder'
+import { TExpression, TPredicate, IDictionary, isNumber } from 'utils'
 
 import { getMonthLength } from 'utils/dateTime'
+
+import { IConstraint, IConstraints } from 'utils/schedule'
+
+import { buildAction } from 'actionBuilder'
 
 interface IYears extends IDictionary<number> {
   year: number
@@ -34,17 +36,6 @@ export interface IDateTime {
   month: number
   year: number
 }
-
-interface IConstraint {
-  step?: number | TExpression;
-  expression?: TExpression;
-}
-
-interface IConstraints {
-  [name: string]: IConstraint
-}
-
-const isNumber = <T>(data: number | T): data is number => typeof data === 'number'
 
 function buildIncrementor (step: number | TExpression = 1): TIncrementor {
   return isNumber(step)

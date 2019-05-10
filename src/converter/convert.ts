@@ -5,6 +5,12 @@ import {
   IPeriod
 } from 'utils'
 
+import {
+  IConstraints,
+  ISchedule,
+  ICalculableSchedule
+} from 'utils/schedule'
+
 function addCondition (relation: string, expression: TExpression, condition: TExpression) {
   switch (expression.length) {
     case 0: {
@@ -20,14 +26,6 @@ function addCondition (relation: string, expression: TExpression, condition: TEx
   }
 }
 
-function normalizeOption<T> (option: TOption<T>) {
-  return Array.isArray(option) ? option : [option]
-}
-
-function periodToArray<T> ({ start, end }: IPeriod<T>) {
-  return [normalizeOption(start), normalizeOption(end)]
-}
-
 type TConditionBuilder = (value: any, key: string) => TExpression
 
 function buildReducerBuilder (constraints: TListedEventConstraints) {
@@ -35,10 +33,6 @@ function buildReducerBuilder (constraints: TListedEventConstraints) {
     (expression: TExpression, key: string) => constraints[key]
       ? addCondition('@&', expression, conditionBuilder(constraints[key], key))
       : expression
-}
-
-interface IPeriods {
-  [name: string]: string
 }
 
 function buildConstraintsReducer (
@@ -137,13 +131,13 @@ function buildRulesBuilder (events: IListedEvent[], expressions: TExpression[]) 
   }
 }
 
-export function convert (commonSchedule: IListedSchedule): ISchedule {
-  const { name, period, fields, events, rules } = commonSchedule
+export function convert (schedule: ISchedule): ICalculableSchedule {
+  const { name, period, fields, events, rules } = schedule
   const constraints: IConstraints = {}
   const rulesKeys = rules.map(({ id }) => id)
   const expressionBuilder = buildExpressionBuilder(rulesKeys)
   const expressions: TExpression[] = events.map(expressionBuilder)
   const ruleBuilder = buildRulesBuilder(events, expressions)
   const fieldRules = fields.map(ruleBuilder)
-  return { name, period, constraints, rules: rules.concat(fieldRules) }
+  return { name, period, constraints, rules }
 }

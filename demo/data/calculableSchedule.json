@@ -1,0 +1,35 @@
+{
+  "name": "РАСПИСАНИЕ ЗАНЯТИЙ на неделю c 06.05.2019 по 12.05.2019 для группы 147а",
+  "period": {
+    "start": 1557090000000,
+    "end": 1557608400000
+  },
+  "rules": [
+    {
+      "id": "call",
+      "expression": [
+        "@case", ["@inTimePeriod", [[8, 0], [9, 30]], 1,
+          "@case", ["@inTimePeriod", [[9, 40], [11, 10]], 2,
+            "@case", ["@inTimePeriod", [[11, 20], [12, 50]], 3,
+              "@case", ["@inTimePeriod", [[13, 50], [15, 20]], 4,
+                "@case", ["@inTimePeriod", [[15, 30], [17, 0]], 5,
+                  "@case", ["@inTimePeriod", [[17, 10], [18, 40]], 6,
+                    "@case", ["@inTimePeriod", [[18, 50], [20, 20]], 7,
+                      "@case", ["@inTimePeriod", [[20, 30], [22, 0]], 8,
+                        "@default", [false] ] ] ] ] ] ] ] ]
+      ]
+    },
+    {
+      "id": "subject",
+      "expression": [
+        "$>>", "@match", [], [
+          "$>>", "@case", [  ], []
+        ]
+      ],
+      "require": [ "call" ]
+    }
+  ],
+  "constraints": {
+
+  }
+}

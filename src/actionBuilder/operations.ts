@@ -4,49 +4,34 @@ import { IPeriod, TPredicate, period } from 'utils'
 
 import { dateTime, date, time } from 'utils/dateTime'
 
-type THandler<T> = (value: T) => any | T
-
-interface IMatch<T> {
-  case: (predicate: (value: T) => boolean, handler: THandler<T>) => IMatch<T>
-  default: (handler: THandler<T>) => any
-}
-
-function matched<T> (value: T): IMatch<T> {
-  return {
-    case: () => matched(value),
-    default: () => value
-  }
-}
-
-const evalResult = <T>(handler: THandler<T>, value: T) => typeof handler === 'function' ? handler(value) : handler
-
-function match<T> (value: T): IMatch<T> {
-  return {
-    case (predicate: TPredicate<T>, handler: THandler<T>) {
-      if (predicate(value)) {
-        return matched(evalResult(handler, value))
-      }
-      return match(value)
-    },
-    default (handler) {
-      return evalResult(handler, value)
-    } 
-  }
+function evaluate<T> (handler: any, value: T) {
+  return typeof handler === 'function' ? handler(value) : handler
 }
 
 export const operations: TOperations = {
-  match,
-  case<T> (predicate: TPredicate<T>, handler: THandler<T>, el: IMatch<T>): IMatch<T> {
-    return el.case(predicate, handler)
+  case<T> (predicate: TPredicate<T>, handler: any, next: (value: T) => any, value: T) {
+    return predicate(value) ? evaluate(handler, value) : next(value)
   },
-  default<T> (handler: THandler<T>, el: IMatch<T>) {
-    return el.default(handler)
+  default<T> (handler: any, value: T) {
+    return evaluate(handler, value)
   },
   in<T> ({ start, end }: IPeriod<T>, value: T) {
     return start <= value && value <= end
   },
+  or<T> (predicate: TPredicate<T>, next: (value: T) => any, value: T) {
+    if (value !== undefined) {
+      return evaluate(predicate, value) || evaluate(next, value)
+    }
+    return evaluate(predicate, next)
+  },
+  and<T> (predicate: TPredicate<T>, next: (value: T) => any, value: T) {
+    if (value !== undefined) {
+      return evaluate(predicate, value) && evaluate(next, value)
+    }
+    return evaluate(predicate, next)
+  },
   period,
   dateTime,
   date,
-  time
+  time,
 }

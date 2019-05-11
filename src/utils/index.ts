@@ -1,6 +1,8 @@
+import { TExpression } from 'rule-interpreter'
+
 /** TYPES **/
 
-export type TExpression = any[]
+export { TExpression }
 
 export type TAction = (...args: any[]) => any
 

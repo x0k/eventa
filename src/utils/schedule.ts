@@ -30,7 +30,7 @@ export interface IEventPeriods extends IDictionary<TDateTimePeriod | undefined> 
 
 export type TEventConstraints = IEventOptions & IEventPeriods & IDictionary<TOption<TValues>>
 
-interface IEvent {
+export interface IEvent {
   data: IDictionary<TValues>
   includes: TEventConstraints
   excludes: TEventConstraints

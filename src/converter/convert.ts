@@ -2,14 +2,21 @@ import {
   TValues,
   TOption,
   TExpression,
-  IPeriod
+  IPeriod,
+  period
 } from 'utils'
 
 import {
   IConstraints,
   ISchedule,
-  ICalculableSchedule
+  ICalculableSchedule,
+  TDateTimePeriod,
+  TDateTime
 } from 'utils/schedule'
+
+import {
+  dateTime
+} from 'utils/dateTime'
 
 function addCondition (relation: string, expression: TExpression, condition: TExpression) {
   switch (expression.length) {
@@ -131,6 +138,27 @@ function buildRulesBuilder (events: IListedEvent[], expressions: TExpression[]) 
   }
 }
 
+function transformDateTime (value: TDateTime): Date {
+  if (Array.isArray(value)) {
+    if (value.length > 1) {
+      // @ts-ignore
+      return dateTime(...value)
+    }
+    if (value.length === 1) {
+      return dateTime(value[0], 0)
+    }
+    throw new Error('Date arguments not provided')
+  }
+  return new Date(value)
+}
+
+function transformPeriod ({ start, end }: TDateTimePeriod): IPeriod<number> {
+  const [ startTime, endTime ] = [start, end]
+    .map(transformDateTime)
+    .map(date => date.getTime())
+  return period(startTime, endTime)
+}
+
 export function convert (schedule: ISchedule): ICalculableSchedule {
   const { name, period, fields, events, rules } = schedule
   const constraints: IConstraints = {}
@@ -139,5 +167,10 @@ export function convert (schedule: ISchedule): ICalculableSchedule {
   const expressions: TExpression[] = events.map(expressionBuilder)
   const ruleBuilder = buildRulesBuilder(events, expressions)
   const fieldRules = fields.map(ruleBuilder)
-  return { name, period, constraints, rules }
+  return {
+    name,
+    period: transformPeriod(period),
+    constraints,
+    rules
+  }
 }

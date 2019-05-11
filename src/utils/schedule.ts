@@ -9,9 +9,9 @@ export interface IConstraints {
   [name: string]: IConstraint
 }
 
-type TDateTime = TOption<number>
+export type TDateTime = TOption<number>
 
-type TDateTimePeriod = IPeriod<TDateTime>
+export type TDateTimePeriod = IPeriod<TDateTime>
 
 export interface IEventOptions extends IDictionary<TDateTime | undefined> {
   year?: TDateTime
@@ -52,7 +52,7 @@ export interface ISchedule {
 
 export interface ICalculableSchedule {
   name: string
-  period: TDateTimePeriod
+  period: IPeriod<number>
   rules: IRule[]
   constraints: IConstraints
 }

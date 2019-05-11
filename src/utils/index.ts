@@ -36,5 +36,5 @@ export function normalizeOption<T> (option: TOption<T>) {
 }
 
 export function periodToArray<T> ({ start, end }: IPeriod<T>) {
-  return [start, end].map(normalizeOption)
+  return [start, end]
 }

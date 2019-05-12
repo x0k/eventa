@@ -23,6 +23,8 @@ export interface IPeriod<T> {
   end: T
 }
 
+export type TPair<T> = [ T, T ]
+
 /** FUNCTIONS **/
 
 export function isNumber<T> (data: number | T): data is number {
@@ -39,4 +41,10 @@ export function normalizeOption<T> (option: TOption<T>) {
 
 export function periodToArray<T> ({ start, end }: IPeriod<T>) {
   return [start, end]
+}
+
+/** Errors **/
+
+export function typeError (expected: string, element: any) {
+  return new TypeError(`Expected ${expected}, but got ${typeof element}`)
 }

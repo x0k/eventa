@@ -1,12 +1,14 @@
-export function time (hours: number, minutes: number) {
+export type TDateTime = [ number, number, number?, number?, number? ]
+
+export function time ([ hours, minutes ]: TDateTime) {
   return new Date(0, 0, 1, hours, minutes)
 }
 
-export function date (month: number, date: number) {
+export function date ([ month, date ]: TDateTime) {
   return new Date(0, month, date)
 }
 
-export function dateTime (year: number, month: number, date?: number, hours?: number, minutes?: number) {
+export function dateTime ([ year, month, date, hours, minutes ]: TDateTime) {
   return new Date(year, month, date, hours, minutes)
 }
 

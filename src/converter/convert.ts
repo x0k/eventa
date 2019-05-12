@@ -3,20 +3,18 @@ import {
   TOption,
   TExpression,
   IPeriod,
-  period
+  IDictionary
 } from 'utils'
 
 import {
   IConstraints,
   ISchedule,
   ICalculableSchedule,
-  TDateTimePeriod,
-  TDateTime
+  IEvent,
+  TEventConstraints
 } from 'utils/schedule'
 
-import {
-  dateTime
-} from 'utils/dateTime'
+import { transformPeriod } from './period'
 
 function addCondition (relation: string, expression: TExpression, condition: TExpression) {
   switch (expression.length) {
@@ -35,7 +33,7 @@ function addCondition (relation: string, expression: TExpression, condition: TEx
 
 type TConditionBuilder = (value: any, key: string) => TExpression
 
-function buildReducerBuilder (constraints: TListedEventConstraints) {
+function buildReducerBuilder (constraints: TEventConstraints) {
   return (conditionBuilder: TConditionBuilder) =>
     (expression: TExpression, key: string) => constraints[key]
       ? addCondition('@&', expression, conditionBuilder(constraints[key], key))
@@ -43,11 +41,11 @@ function buildReducerBuilder (constraints: TListedEventConstraints) {
 }
 
 function buildConstraintsReducer (
-  constraints: TListedEventConstraints,
+  constraints: TEventConstraints,
   periodConditionBuilder: TConditionBuilder,
   optionConditionBuilder: TConditionBuilder
 ) {
-  return (periods: IPeriods, options: string[], rules: string[], defaultValue: TExpression) => {
+  return (periods: IDictionary<string>, options: string[], rules: string[], defaultValue: TExpression) => {
     const reducerBuilder = buildReducerBuilder(constraints)
     const periodReducer = reducerBuilder(periodConditionBuilder)
     const optionReducer = reducerBuilder(optionConditionBuilder)
@@ -61,39 +59,6 @@ function buildConstraintsReducer (
         )
       )
     )
-  }
-}
-
-function buildExpressionBuilder (rules: string[]) {
-  return ({ includes, excludes }: IListedEvent): TExpression => {
-    const periods: IPeriods = {
-      'dateTimePeriod': 'dateTime',
-      'datePeriod': 'fullDate',
-      'timePeriod': 'time'
-    }
-    const options = ['year', 'month', 'date', 'day', 'hour', 'minute']
-
-    const periodConditionBuilder = <T>(period: IPeriod<T>, key: string) =>
-      [ '@in', key, ...periodToArray(period), `%${periods[key]}` ]
-    const optionConditionBuilder = <T>(option: TOption<T>, key: string): TExpression => Array.isArray(option)
-      ? [ '@in', option, `%${key}` ]
-      : [ '@=', option, `%${key}` ]
-    const invert = (conditionBuilder: TConditionBuilder) =>
-      (value: any, key: string) => [ '@!', ...conditionBuilder(value, key) ]
-
-    let expression: TExpression = []
-
-    if (includes) {
-      const includesReducer = buildConstraintsReducer(includes, periodConditionBuilder, optionConditionBuilder)
-      expression = includesReducer(periods, options, rules, expression)
-    }
-
-    if (excludes) {
-      const excludesReducer = buildConstraintsReducer(excludes, invert(periodConditionBuilder), invert(optionConditionBuilder))
-      expression = excludesReducer(periods, options, rules, expression)
-    }
-
-    return expression
   }
 }
 
@@ -119,7 +84,7 @@ function joinExpression (conditions: TConditions): TExpression {
   return routes
 }
 
-function buildRulesBuilder (events: IListedEvent[], expressions: TExpression[]) {
+function rulesBuilder (events: IEvent[], expressions: TExpression[]) {
   return (field: string) => {
     const conditions: TConditions = new Map()
     for (let i = 0; i < events.length; i++) {
@@ -138,35 +103,62 @@ function buildRulesBuilder (events: IListedEvent[], expressions: TExpression[]) 
   }
 }
 
-function transformDateTime (value: TDateTime): Date {
-  if (Array.isArray(value)) {
-    if (value.length > 1) {
-      // @ts-ignore
-      return dateTime(...value)
-    }
-    if (value.length === 1) {
-      return dateTime(value[0], 0)
-    }
-    throw new Error('Date arguments not provided')
+function conditionBuilder(key: string, expression: TExpression) {
+  return [ '$>>', '@get', [ key ] ].concat(expression)
+}
+
+function transformOption<T> (option: TOption<T>) {
+  return Array.isArray(option)
+    ? [ '@includes', [ option ] ]
+    : [ '@equal', [ option ] ]
+}
+
+function expressionBuilder (rules: string[]) {
+
+  const periods: IDictionary<string> = {
+    'dateTimePeriod': 'dateTime',
+    'datePeriod': 'date',
+    'timePeriod': 'time'
   }
-  return new Date(value)
+
+  const options = ['year', 'month', 'date', 'day', 'hour', 'minute']
+
+  const periodConditionBuilder = <T>(period: IPeriod<T>, key: string) =>
+    conditionBuilder(key, [ '@in', period ])
+
+  const optionConditionBuilder = <T>(option: TOption<T>, key: string): TExpression => 
+    conditionBuilder(key, transformOption(option))
+  
+  const invert = (conditionBuilder: TConditionBuilder) =>
+    (value: any, key: string) => [ '@not', conditionBuilder(value, key) ]
+
+  const eventReducer = (event: IEvent) => (expression: TExpression, key: string) => {
+    switch (key) {
+      case 'includes':{
+        const reducer = buildConstraintsReducer(event.includes, periodConditionBuilder, optionConditionBuilder)
+        return reducer(periods, options, rules, expression)
+      }
+      case 'excludes':{
+        const reducer = buildConstraintsReducer(event.excludes, invert(periodConditionBuilder), invert(optionConditionBuilder))
+        return reducer(periods, options, rules, expression)
+      }
+      default:
+        return expression
+    }
+  }
+
+  return (event: IEvent): TExpression => Object.keys(event).reduce(eventReducer(event), [])
 }
 
-function transformPeriod ({ start, end }: TDateTimePeriod): IPeriod<number> {
-  const [ startTime, endTime ] = [start, end]
-    .map(transformDateTime)
-    .map(date => date.getTime())
-  return period(startTime, endTime)
-}
-
-export function convert (schedule: ISchedule): ICalculableSchedule {
-  const { name, period, fields, events, rules } = schedule
+export function convert ({ name, period, fields, events, rules }: ISchedule): ICalculableSchedule {
   const constraints: IConstraints = {}
+
   const rulesKeys = rules.map(({ id }) => id)
-  const expressionBuilder = buildExpressionBuilder(rulesKeys)
-  const expressions: TExpression[] = events.map(expressionBuilder)
-  const ruleBuilder = buildRulesBuilder(events, expressions)
-  const fieldRules = fields.map(ruleBuilder)
+  const build = expressionBuilder(rulesKeys)
+  const expressions: TExpression[] = events.map(build)
+  console.log(expressions)
+  // const ruleBuilder = rulesBuilder(events, expressions)
+  // const fieldRules = fields.map(ruleBuilder)
   return {
     name,
     period: transformPeriod(period),

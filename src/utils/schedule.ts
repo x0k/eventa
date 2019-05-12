@@ -1,5 +1,7 @@
 import { TExpression, IPeriod, TOption, IDictionary, TValues } from 'utils'
 
+import { TDateTime } from 'utils/dateTime'
+
 export interface IConstraint {
   step?: number | TExpression;
   expression?: TExpression;
@@ -9,17 +11,17 @@ export interface IConstraints {
   [name: string]: IConstraint
 }
 
-export type TDateTime = TOption<number>
+export type TDateTimeOption = number | TDateTime
 
-export type TDateTimePeriod = IPeriod<TDateTime>
+export type TDateTimePeriod = IPeriod<TDateTimeOption>
 
-export interface IEventOptions extends IDictionary<TDateTime | undefined> {
-  year?: TDateTime
-  month?: TDateTime
-  date?: TDateTime
-  day?: TDateTime
-  hour?: TDateTime
-  minute?: TDateTime
+export interface IEventOptions extends IDictionary<TDateTimeOption | undefined> {
+  year?: TDateTimeOption
+  month?: TDateTimeOption
+  date?: TDateTimeOption
+  day?: TDateTimeOption
+  hour?: TDateTimeOption
+  minute?: TDateTimeOption
 }
 
 export interface IEventPeriods extends IDictionary<TDateTimePeriod | undefined> {

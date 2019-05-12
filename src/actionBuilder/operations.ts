@@ -1,6 +1,6 @@
 import { TOperations } from 'rule-interpreter'
 
-import { IPeriod, TPredicate, period } from 'utils'
+import { IPeriod, TPredicate, period, IDictionary } from 'utils'
 
 import { dateTime, date, time } from 'utils/dateTime'
 
@@ -29,6 +29,18 @@ export const operations: TOperations = {
       return evaluate(predicate, value) && evaluate(next, value)
     }
     return evaluate(predicate, next)
+  },
+  not (handler: any, value: any) {
+    return !evaluate(handler, value)
+  },
+  equal (expected: any, actual: any) {
+    return expected === actual
+  },
+  includes (array: any[], value: any) {
+    return array.indexOf(value) > -1
+  },
+  get<T> (key: string, dictionary: IDictionary<T>) {
+    return dictionary[key]
   },
   period,
   dateTime,

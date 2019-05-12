@@ -1,6 +1,8 @@
+import { IRule } from 'utils/schedule';
+
+import { IEvent } from '../utils'
+
 import { expressionBuilder } from '../expressionBuilder'
-import { IDictionary, TOption, TValue } from 'utils'
-import { IRule, IEvent, IEventOptions, IEventPeriods } from 'utils/schedule';
 
 const rules: IRule[] = [
   {

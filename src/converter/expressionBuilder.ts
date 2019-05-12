@@ -5,14 +5,9 @@ import {
   IPeriod
 } from 'utils'
 
-import { IEvent, TEventConstraints } from 'utils/schedule'
+import { IEvent, TEventConstraints } from './utils'
 
-function addCondition (relation: string, expression: TExpression, condition: TExpression) {
-  if (expression.length === 0) {
-    return condition
-  }
-  return [ relation, expression.concat(condition) ]
-}
+import { addCondition } from './utils'
 
 type TConditionBuilder = (value: any, key: string) => TExpression
 

@@ -16,8 +16,6 @@ export type TOption<T> = T | T[]
 // Values in schedules schemes
 export type TValue = string | number | boolean
 
-export type TValues = IDictionary<TValue>
-
 export interface IPeriod<T> {
   start: T
   end: T

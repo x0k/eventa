@@ -1,4 +1,4 @@
-import { TExpression, IPeriod, TOption, IDictionary, TValues } from 'utils'
+import { TExpression, IPeriod, TOption, IDictionary, TValue } from 'utils'
 
 import { TDateTime } from 'utils/dateTime'
 
@@ -15,7 +15,7 @@ export type TDateTimeOption = number | TDateTime
 
 export type TDateTimePeriod = IPeriod<TDateTimeOption>
 
-export interface IEventOptions extends IDictionary<TDateTimeOption | undefined> {
+export interface IEventOptions {
   year?: TDateTimeOption
   month?: TDateTimeOption
   date?: TDateTimeOption
@@ -24,18 +24,18 @@ export interface IEventOptions extends IDictionary<TDateTimeOption | undefined> 
   minute?: TDateTimeOption
 }
 
-export interface IEventPeriods extends IDictionary<TDateTimePeriod | undefined> {
+export interface IEventPeriods {
   dateTimePeriod?: TDateTimePeriod
   datePeriod?: TDateTimePeriod
   timePeriod?: TDateTimePeriod
 }
 
-export type TEventConstraints = IEventOptions & IEventPeriods & IDictionary<TOption<TValues>>
+export type TEventConstraints = IDictionary<TOption<TValue>> & IEventOptions & IEventPeriods
 
 export interface IEvent {
-  data: IDictionary<TValues>
-  includes: TEventConstraints
-  excludes: TEventConstraints
+  data: IDictionary<TValue>
+  includes?: TEventConstraints
+  excludes?: TEventConstraints
 }
 
 export interface IRule {

@@ -1,70 +1,29 @@
 import {
-  TValues,
-  TOption,
+  TValue,
   TExpression,
-  IPeriod,
-  IDictionary
 } from 'utils'
 
 import {
   IConstraints,
   ISchedule,
   ICalculableSchedule,
-  IEvent,
-  TEventConstraints
+  IEvent
 } from 'utils/schedule'
 
 import { transformPeriod } from './period'
 
+import { expressionBuilder } from './expressionBuilder'
+
 function addCondition (relation: string, expression: TExpression, condition: TExpression) {
-  switch (expression.length) {
-    case 0: {
-      return condition
-    }
-    default: {
-      if (expression[0] !== relation) {
-        return [relation, expression.concat(condition)]
-      }
-      const [, data] = expression
-      return [relation, data.concat(condition)]
-    }
+  if (expression.length === 0) {
+    return condition
   }
+  return [ relation, [ expression, condition ] ]
 }
 
-type TConditionBuilder = (value: any, key: string) => TExpression
+type TNamedCondition = [TValue, TExpression]
 
-function buildReducerBuilder (constraints: TEventConstraints) {
-  return (conditionBuilder: TConditionBuilder) =>
-    (expression: TExpression, key: string) => constraints[key]
-      ? addCondition('@&', expression, conditionBuilder(constraints[key], key))
-      : expression
-}
-
-function buildConstraintsReducer (
-  constraints: TEventConstraints,
-  periodConditionBuilder: TConditionBuilder,
-  optionConditionBuilder: TConditionBuilder
-) {
-  return (periods: IDictionary<string>, options: string[], rules: string[], defaultValue: TExpression) => {
-    const reducerBuilder = buildReducerBuilder(constraints)
-    const periodReducer = reducerBuilder(periodConditionBuilder)
-    const optionReducer = reducerBuilder(optionConditionBuilder)
-    return rules.reduce(
-      optionReducer,
-      options.reduce(
-        optionReducer,
-        Object.keys(periods).reduce(
-          periodReducer,
-          defaultValue
-        )
-      )
-    )
-  }
-}
-
-type TNamedCondition = [TValues, TExpression]
-
-type TConditions = Map<TValues, TExpression>
+type TConditions = Map<TValue, TExpression>
 
 function joinExpression (conditions: TConditions): TExpression {
   const map = (acc: TExpression, [ value, expression ]: TNamedCondition) => {
@@ -103,52 +62,7 @@ function rulesBuilder (events: IEvent[], expressions: TExpression[]) {
   }
 }
 
-function conditionBuilder(key: string, expression: TExpression) {
-  return [ '$>>', '@get', [ key ] ].concat(expression)
-}
 
-function transformOption<T> (option: TOption<T>) {
-  return Array.isArray(option)
-    ? [ '@includes', [ option ] ]
-    : [ '@equal', [ option ] ]
-}
-
-function expressionBuilder (rules: string[]) {
-
-  const periods: IDictionary<string> = {
-    'dateTimePeriod': 'dateTime',
-    'datePeriod': 'date',
-    'timePeriod': 'time'
-  }
-
-  const options = ['year', 'month', 'date', 'day', 'hour', 'minute']
-
-  const periodConditionBuilder = <T>(period: IPeriod<T>, key: string) =>
-    conditionBuilder(key, [ '@in', period ])
-
-  const optionConditionBuilder = <T>(option: TOption<T>, key: string): TExpression => 
-    conditionBuilder(key, transformOption(option))
-  
-  const invert = (conditionBuilder: TConditionBuilder) =>
-    (value: any, key: string) => [ '@not', conditionBuilder(value, key) ]
-
-  const eventReducer = (event: IEvent) => (expression: TExpression, key: string) => {
-    switch (key) {
-      case 'includes':{
-        const reducer = buildConstraintsReducer(event.includes, periodConditionBuilder, optionConditionBuilder)
-        return reducer(periods, options, rules, expression)
-      }
-      case 'excludes':{
-        const reducer = buildConstraintsReducer(event.excludes, invert(periodConditionBuilder), invert(optionConditionBuilder))
-        return reducer(periods, options, rules, expression)
-      }
-      default:
-        return expression
-    }
-  }
-
-  return (event: IEvent): TExpression => Object.keys(event).reduce(eventReducer(event), [])
-}
 
 export function convert ({ name, period, fields, events, rules }: ISchedule): ICalculableSchedule {
   const constraints: IConstraints = {}

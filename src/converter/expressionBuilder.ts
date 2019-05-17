@@ -2,46 +2,44 @@ import {
   TExpression,
   TOption,
   IDictionary,
-  IPeriod
-} from 'utils'
+  IPeriod,
+  typeError
+} from '../utils'
 
-import { IEvent, TEventConstraints } from './utils'
+import {
+  IEvent,
+  IEventConstraints,
+  addCondition
+} from './utils'
 
-import { addCondition } from './utils'
+type TReducer<T> = (dictionary: IDictionary<T>) => (acc: TExpression, key: string) => TExpression
 
-type TConditionBuilder = (value: any, key: string) => TExpression
-
-function reducerBuilder (constraints: TEventConstraints) {
-  return (conditionBuilder: TConditionBuilder) =>
-    (expression: TExpression, key: string) => constraints[key]
-      ? addCondition('@and', expression, conditionBuilder(constraints[key], key))
-      : expression
+function reduce<T> (dictionary: IDictionary<T>, reducer: TReducer<T>) {
+  return Object.keys(dictionary).reduce(reducer(dictionary), [])
 }
 
-function buildConstraintsReducer (
-  constraints: TEventConstraints,
-  periodConditionBuilder: TConditionBuilder,
-  optionConditionBuilder: TConditionBuilder
-) {
-  return (periods: IDictionary<string>, options: string[], rules: string[], defaultValue: TExpression) => {
-    const build = reducerBuilder(constraints)
-    const periodReducer = build(periodConditionBuilder)
-    const optionReducer = build(optionConditionBuilder)
-    return rules.reduce(
-      optionReducer,
-      options.reduce(
-        optionReducer,
-        Object.keys(periods).reduce(
-          periodReducer,
-          defaultValue
-        )
-      )
-    )
+function reduceConstraints<T, D extends IDictionary<T>> (constraints: IEventConstraints<D>, buildCondition: (constraint: D) => TExpression) {
+  const reducer = (expression: TExpression, key: string) => {
+    switch (key) {
+      case 'includes': {
+        const { includes } = constraints
+        if (includes) {
+          return addCondition('@and', expression, buildCondition(includes))
+        }
+        throw typeError('Includes constraints', includes)
+      }
+      case 'excludes': {
+        const { excludes } = constraints
+        if (excludes) {
+          return addCondition('@and', expression, [ '@not', buildCondition(excludes) ])
+        }
+        throw typeError('Excludes constraints', excludes)
+      }
+      default:
+        return expression
+    }
   }
-}
-
-function conditionBuilder(key: string, expression: TExpression) {
-  return [ '$>>', '@get', [ key ] ].concat(expression)
+  return Object.keys(constraints).reduce(reducer, [])
 }
 
 function transformOption<T> (option: TOption<T>) {
@@ -50,41 +48,56 @@ function transformOption<T> (option: TOption<T>) {
     : [ '@equal', [ option ] ]
 }
 
-export function expressionBuilder (rules: string[]) {
+function buildCondition (key: string, expression: TExpression) {
+  return [ '$>>', '@get', [ key ] ].concat(expression)
+}
 
-  const periods: IDictionary<string> = {
-    'dateTimePeriod': 'dateTime',
-    'datePeriod': 'date',
-    'timePeriod': 'time'
-  }
+function buildReducer<T> (buildExpression: (value: T) => TExpression): TReducer<T> {
+  return (constraints: IDictionary<T>) =>
+    (expression: TExpression, key: string) =>
+      addCondition('@and', expression, buildCondition(key, buildExpression(constraints[key])))
+}
 
-  const options = ['year', 'month', 'date', 'day', 'hour', 'minute']
+function buildConditionBuilder<T> (buildExpression: (value: T) => TExpression) {
+  const reducer = buildReducer(buildExpression)
+  return (dictionary: IDictionary<T>) => reduce(dictionary, reducer)
+}
 
-  const periodConditionBuilder = <T>(period: IPeriod<T>, key: string) =>
-    conditionBuilder(key, [ '@in', period ])
+const buildOptionsExpression = buildConditionBuilder(transformOption)
+const buildPeriodsExpression = buildConditionBuilder(<T>(period: IPeriod<T>) => [ '@in', period ])
 
-  const optionConditionBuilder = <T>(option: TOption<T>, key: string): TExpression => 
-    conditionBuilder(key, transformOption(option))
-  
-  const invert = (conditionBuilder: TConditionBuilder) =>
-    (value: any, key: string) => [ '@not', conditionBuilder(value, key) ]
-
-  const eventReducer = (event: IEvent) => (expression: TExpression, key: string) => {
+function eventReducer (event: IEvent) {
+  return (expression: TExpression, key: string) => {
     switch (key) {
-      case 'includes':{
-        // @ts-ignore
-        const reducer = buildConstraintsReducer(event.includes, periodConditionBuilder, optionConditionBuilder)
-        return reducer(periods, options, rules, expression)
+      case 'options': {
+        const { options } = event
+        if (options) {
+          // @ts-ignore
+          return addCondition('@and', expression, reduceConstraints(options, buildOptionsExpression))
+        }
+        throw typeError('Options constraints', options)
       }
-      case 'excludes':{
-        // @ts-ignore
-        const reducer = buildConstraintsReducer(event.excludes, invert(periodConditionBuilder), invert(optionConditionBuilder))
-        return reducer(periods, options, rules, expression)
+      case 'periods': {
+        const { periods } = event 
+        if (periods) {
+          // @ts-ignore
+          return addCondition('@and', expression, reduceConstraints(periods, buildPeriodsExpression))
+        }
+        throw typeError('Periods constraints', periods)
+      }
+      case 'rules': {
+        const { rules } = event
+        if (rules) {
+          return addCondition('@and', expression, reduceConstraints(rules, buildOptionsExpression))
+        }
       }
       default:
         return expression
     }
   }
+}
 
-  return (event: IEvent): TExpression => Object.keys(event).reduce(eventReducer(event), [])
+export function buildExpression (event: IEvent) {
+  // @ts-ignore
+  return reduce(event, eventReducer)
 }

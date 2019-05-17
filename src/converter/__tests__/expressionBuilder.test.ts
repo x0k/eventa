@@ -2,7 +2,7 @@ import { IRule } from 'utils/schedule';
 
 import { IEvent } from '../utils'
 
-import { expressionBuilder } from '../expressionBuilder'
+import { buildExpression } from '../expressionBuilder'
 
 const rules: IRule[] = [
   {
@@ -23,24 +23,27 @@ const rules: IRule[] = [
 
 const events: IEvent[] = [
   {
-    data: {
-      subject: "Программная инженерия и информационный менеджмент",
-      type: "лаб.",
-      teacher: "Майнина К.А.",
-      room: "504/1"
+    "data": {
+      "subject": "Программная инженерия и информационный менеджмент",
+      "type": "лаб.",
+      "teacher": "Майнина К.А.",
+      "room": "504/1"
     },
-    includes: {
-      day: [1, 3],
-      call: [6, 7]
+    "options": {
+      "includes": {
+        "day": [1, 3]
+      }
+    },
+    "rules": {
+      "includes": {
+        "call": [6, 7]
+      }
     }
   },
 ]
 
-const keys= rules.map(({ id }) => id)
-const build = expressionBuilder(keys)
-
 test('Expression builder', () => {
-  const expression = build(events[0])
+  const expression = buildExpression(events[0])
   expect(expression).toEqual([
     '@and', [
       '$>>', '@get', [ 'day' ], '@includes', [ [1, 3] ],

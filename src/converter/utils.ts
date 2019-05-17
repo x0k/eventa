@@ -12,7 +12,7 @@ export type TDateTimeOption = number | TDateTime
 
 export type TDateTimePeriod = IPeriod<TDateTimeOption>
 
-export interface IEventOptions {
+export interface IEventOptions extends IDictionary<TDateTimeOption | undefined> {
   year?: TDateTimeOption
   month?: TDateTimeOption
   date?: TDateTimeOption
@@ -21,18 +21,21 @@ export interface IEventOptions {
   minute?: TDateTimeOption
 }
 
-export interface IEventPeriods {
+export interface IEventPeriods extends IDictionary<TDateTimePeriod | undefined> {
   dateTimePeriod?: TDateTimePeriod
   datePeriod?: TDateTimePeriod
   timePeriod?: TDateTimePeriod
 }
 
-export type TEventConstraints = IDictionary<TOption<TValue>> & IEventOptions & IEventPeriods
-
+export interface IEventConstraints<T> extends IDictionary<T | undefined>{
+  includes?: T
+  excludes?: T
+}
 export interface IEvent {
   data: IDictionary<TValue>
-  includes?: TEventConstraints
-  excludes?: TEventConstraints
+  options?: IEventConstraints<IEventOptions>
+  periods?: IEventConstraints<IEventPeriods>
+  rules?: IEventConstraints<IDictionary<TOption<TValue>>>
 }
 
 export interface IRule {

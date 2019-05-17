@@ -1,20 +1,15 @@
 import {
   TValue,
   TExpression,
+  IDictionary,
 } from 'utils'
 
 import { IRule } from 'utils/schedule'
 
-import { IEvent } from './utils'
+import { IEvent, addCondition } from './utils'
 
-import { addCondition } from './utils'
-
-function requireReducer (filterKeys: (acc: string[], keys: string[]) => string[]) {
-  return (acc: string[], { excludes, includes }: IEvent) => acc.concat([excludes, includes]
-    .filter(el => Boolean(el))
-    // @ts-ignore
-    .map(el => Object.keys(el))
-    .reduce(filterKeys, []))
+function requireReducer (acc: IDictionary<any>, { excludes, includes }: IEvent) {
+  return Object.assign(acc, excludes, includes)
 }
 
 function valueReducer (field: string, expressions: TExpression[]) {
@@ -34,15 +29,14 @@ export function ruleBuilder (
   buildExpression: (event: IEvent) => TExpression
 ): (field: string) => IRule {
   const expressions: TExpression[] = events.map(buildExpression)
-  const filterKeys = (acc: string[], keys: string[]) => acc.concat(keys.filter(key => rules.has(key)))
   return (field: string) => {
     const valuesReduce = valueReducer(field, expressions)
     const values = events.reduce(valuesReduce, new Map())
     const expression = Array.from(values.entries()).reduceRight((acc, [ value, expression ]) =>
       // @ts-ignore
-      addCondition('@case', [expression, value], acc), [ '@default', false ])
-    const requireReduce = requireReducer(filterKeys)
-    const require = events.reduce(requireReduce, [])
+      addCondition('@case', expression.concat(value), acc), [ '@default', [ false ] ])
+    const require = Object.keys(events.reduce(requireReducer, {}))
+      .filter(key => rules.has(key))
     return {
       id: field,
       expression,

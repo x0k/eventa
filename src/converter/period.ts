@@ -2,7 +2,7 @@ import { IPeriod, period, typeError } from 'utils'
 
 import { dateTime } from 'utils/dateTime'
 
-import { TDateTimeOption, TDateTimePeriod } from 'utils/schedule'
+import { TDateTimeOption, TDateTimePeriod } from './utils'
 
 function transformDateTime (value: TDateTimeOption): Date {
   if (Array.isArray(value)) {

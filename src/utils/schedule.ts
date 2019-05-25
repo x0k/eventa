@@ -1,18 +1,22 @@
-import { TExpression, IPeriod } from 'utils'
+import { TExpression, IPeriod, IDictionary } from 'utils'
 
 export interface IConstraint {
   step?: number | TExpression;
   expression?: TExpression;
 }
 
-export interface IConstraints {
-  [name: string]: IConstraint
+export interface IConstraints extends IDictionary<IConstraint | undefined> {
+  year?: IConstraint
+  month?: IConstraint
+  date?: IConstraint
+  hour?: IConstraint
+  minute?: IConstraint
 }
 
 export interface IRule {
-  id: string;
-  expression: TExpression;
-  require?: string[];
+  id: string
+  expression: TExpression
+  require?: string[]
 }
 
 export interface ISchedule {

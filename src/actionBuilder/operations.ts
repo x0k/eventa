@@ -1,8 +1,6 @@
 import { TOperations } from 'rule-interpreter'
 
-import { IPeriod, TPredicate, period, IDictionary } from 'utils'
-
-import { dateTime, date, time } from 'utils/dateTime'
+import { IPeriod, TPredicate, period, IDictionary } from '../utils'
 
 function evaluate<T> (handler: any, value: T) {
   return typeof handler === 'function' ? handler(value) : handler
@@ -42,8 +40,5 @@ export const operations: TOperations = {
   get<T> (key: string, dictionary: IDictionary<T>) {
     return dictionary[key]
   },
-  period,
-  dateTime,
-  date,
-  time,
+  period
 }

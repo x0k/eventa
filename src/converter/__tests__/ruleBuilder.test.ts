@@ -1,6 +1,6 @@
 import { IEvent } from '../utils'
 
-import { expressionBuilder } from '../expressionBuilder'
+import { buildExpression } from '../buildExpression'
 
 import { ruleBuilder } from '../ruleBuilder'
 
@@ -43,13 +43,9 @@ const events: IEvent[] = [
   },
 ]
 
-const rules = ['call']
+const buildRule = ruleBuilder(events, buildExpression)
 
-const buildExpression = expressionBuilder(rules)
-
-const buildRule = ruleBuilder(events, new Set(rules), buildExpression)
-
-test.skip('Build one case rule', () => {
+test('Build one case rule', () => {
   const rule = buildRule('room')
   expect(rule).toEqual({
     id: 'room',
@@ -71,7 +67,7 @@ test.skip('Build one case rule', () => {
   })
 })
 
-test.skip('Build two case rule', () => {
+test('Build two case rule', () => {
   const rule = buildRule('teacher')
   expect(rule).toEqual({
     id: 'teacher',

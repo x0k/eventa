@@ -1,12 +1,12 @@
 import { wrap, restrict } from 'iterator-wrapper'
 
-import { TExpression, TPredicate, IDictionary, isNumber } from 'utils'
+import { TExpression, TPredicate, IDictionary, isNumber } from '../utils'
 
-import { getMonthLength } from 'utils/dateTime'
+import { getMonthLength } from '../utils/dateTime'
 
 import { IConstraint, IConstraints } from 'utils/schedule'
 
-import { buildAction } from 'actionBuilder'
+import { buildAction } from '../actionBuilder'
 
 interface IYears extends IDictionary<number> {
   year: number
@@ -37,43 +37,39 @@ export interface IDateTime {
   year: number
 }
 
-function buildIncrementor (step: number | TExpression = 1): TIncrementor {
+function buildIncrementor(step: number | TExpression = 1): TIncrementor {
   return isNumber(step)
     ? (value: number) => value + step
     : buildAction(step)
 }
 
-function buildCondition<T> (expression?: TExpression): TPredicate<T> {
+function buildCondition<T>(expression?: TExpression): TPredicate<T> {
   return expression ? buildAction(expression) : () => true
 }
 
 type TIncrementor = (value: number) => number
 
-type TGenerator<T, R> = (incrementor: TIncrementor, condition: TPredicate<R>, value: number, data: T | number) => IterableIterator<number | R> 
+type TGenerator<T, R> = (incrementor: TIncrementor, condition: TPredicate<R>, value: number, data: T | number) => IterableIterator<number | R>
 
-function withConstraints<T, R> (constraint: IConstraint = {}, generator: TGenerator<T, R>) {
+function withConstraints<T, R>(generator: TGenerator<T, R>, constraint: IConstraint = {}) {
   const { step, expression } = constraint
   const incrementor = buildIncrementor(step)
   const condition = buildCondition(expression)
   return (value: number, data: T | number) => generator(incrementor, condition, value, data)
 }
 
-function buildYears (constraint: IConstraint = {}) {
-  const { step, expression } = constraint
-  const incrementor = buildIncrementor(step)
-  const condition = buildCondition(expression)
-  return function * years (startValue: number) {
-    let value = startValue
-    while (true) {
-      const result = { year: value }
-      if (condition(result)) {
-        return result
-      }
-      value = incrementor(value)
+function* yearsIterator(incrementor: TIncrementor, condition: TPredicate<IYears>, startValue: number) {
+  let value = startValue
+  while (true) {
+    const result = { year: value }
+    if (condition(result)) {
+      yield result
     }
+    value = incrementor(value)
   }
 }
-function * months (incrementor: TIncrementor, condition: TPredicate<IMonths>, startValue: number, data: IYears | number) {
+
+function* monthsIterator(incrementor: TIncrementor, condition: TPredicate<IMonths>, startValue: number, data: IYears | number) {
   if (isNumber(data)) {
     throw new Error('Type error')
   }
@@ -88,7 +84,7 @@ function * months (incrementor: TIncrementor, condition: TPredicate<IMonths>, st
   }
   return value % 12
 }
-function * days (incrementor: TIncrementor, condition: TPredicate<IDays>, startValue: number, data: IMonths | number) {
+function* daysIterator(incrementor: TIncrementor, condition: TPredicate<IDays>, startValue: number, data: IMonths | number) {
   if (isNumber(data)) {
     throw new Error('Type error')
   }
@@ -104,7 +100,7 @@ function * days (incrementor: TIncrementor, condition: TPredicate<IDays>, startV
   }
   return value % len
 }
-function * hours (incrementor: TIncrementor, condition: TPredicate<IHours>, startValue: number, data: IDays | number) {
+function* hoursIterator(incrementor: TIncrementor, condition: TPredicate<IHours>, startValue: number, data: IDays | number) {
   if (isNumber(data)) {
     throw new Error('Type error')
   }
@@ -119,7 +115,7 @@ function * hours (incrementor: TIncrementor, condition: TPredicate<IHours>, star
   return value % 24
 }
 
-function * minutes (incrementor: TIncrementor, condition: TPredicate<IMinutes>, startValue: number, data: IHours | number) {
+function* minutesIterator(incrementor: TIncrementor, condition: TPredicate<IMinutes>, startValue: number, data: IHours | number) {
   if (isNumber(data)) {
     throw new Error('Type error')
   }
@@ -134,37 +130,54 @@ function * minutes (incrementor: TIncrementor, condition: TPredicate<IMinutes>, 
   return value % 60
 }
 
-export function buildIterator (start: Date, end: Date, constraints: IConstraints) {
+export function buildIterator(start: Date, end: Date, constraints: IConstraints = {}) {
+  const endYear = end.getFullYear()
+  const endMonth = end.getMonth()
+  const endDate = end.getDate()
+  const endHour = end.getHours()
+  const endMinute = end.getMinutes()
   const condition = (date: IMinutes | number) => !isNumber(date) && (
-    date.year < end.getFullYear() ||
-    date.month < end.getMonth() ||
-    date.day < end.getDate() ||
-    date.hour < end.getHours() ||
-    date.minute <= end.getMinutes()
+    date.year < endYear || date.year === endYear && (
+      date.month < endMonth || date.month === endMonth && (
+        date.day < endDate || date.day === endDate && (
+          date.hour < endHour || date.hour === endHour && (
+            date.minute <= endMinute
+          )
+        )
+      )
+    )
   )
 
-  const years = buildYears(constraints.year)
-  const constrainedMonths = withConstraints(constraints.month, months)
-  const constrainedDays = withConstraints(constraints.date, days)
-  const constrainedHours = withConstraints(constraints.hour, hours)
-  const constrainedMinutes = withConstraints(constraints.minute, minutes)
+  const {
+    year: yearConstraint,
+    month: monthConstraint,
+    date: dateConstraint,
+    hour: hourConstraint,
+    minute: minuteConstraint
+  } = constraints
+
+  const years = withConstraints(yearsIterator, yearConstraint)
+  const months = withConstraints(monthsIterator, monthConstraint)
+  const days = withConstraints(daysIterator, dateConstraint)
+  const hours = withConstraints(hoursIterator, hourConstraint)
+  const minutes = withConstraints(minutesIterator, minuteConstraint)
 
   return restrict<IMinutes | number>(
     wrap<IHours | number, number, IMinutes>(
       wrap<IDays | number, number, IHours>(
         wrap<IMonths | number, number, IDays>(
-          wrap<IYears, number, IMonths>(
-            years(start.getFullYear()),
-            constrainedMonths,
+          wrap<IYears | number, number, IMonths>(
+            years(start.getFullYear(), {}),
+            months,
             start.getMonth()
           ),
-          constrainedDays,
+          days,
           start.getDate()
         ),
-        constrainedHours,
+        hours,
         start.getHours()
       ),
-      constrainedMinutes,
+      minutes,
       start.getMinutes()
     ),
     condition

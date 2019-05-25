@@ -2,7 +2,7 @@ import { IRule } from 'utils/schedule';
 
 import { IEvent } from '../utils'
 
-import { buildExpression } from '../expressionBuilder'
+import { buildExpression } from '../buildExpression'
 
 const rules: IRule[] = [
   {

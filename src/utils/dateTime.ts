@@ -1,17 +1,3 @@
-export type TDateTime = [ number, number, number?, number?, number? ]
-
-export function time ([ hours, minutes ]: TDateTime) {
-  return new Date(0, 0, 1, hours, minutes)
-}
-
-export function date ([ month, date ]: TDateTime) {
-  return new Date(0, month, date)
-}
-
-export function dateTime ([ year, month, date, hours, minutes ]: TDateTime) {
-  return new Date(year, month, date, hours, minutes)
-}
-
 export function leapYear (year: number) {
   return ((year % 4 === 0) && (year % 100 !== 0)) || (year % 400 === 0)
 }

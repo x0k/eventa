@@ -6,11 +6,9 @@ import {
   TExpression
 } from 'utils'
 
-import { TDateTime } from 'utils/dateTime'
+export type TDateTimeOption = number | number[]
 
-export type TDateTimeOption = number | TDateTime
-
-export type TDateTimePeriod = IPeriod<TDateTimeOption>
+export type TDateTimePeriod = IPeriod<number>
 
 export interface IEventOptions extends IDictionary<TDateTimeOption | undefined> {
   year?: TDateTimeOption

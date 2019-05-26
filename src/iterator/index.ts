@@ -1,6 +1,6 @@
-import { wrap, restrict } from 'iterator-wrapper'
+import { wrapIterable, restrictIterable, castIterableType } from 'iterator-wrapper'
 
-import { TExpression, TPredicate, IDictionary, isNumber } from '../utils'
+import { TExpression, TPredicate, IDictionary, isNumber, typeError } from '../utils'
 
 import { getMonthLength } from '../utils/dateTime'
 
@@ -83,7 +83,7 @@ function* dateIterator(incrementor: TIncrementor, condition: TPredicate<IDate>, 
     throw new Error('Type error')
   }
   const { year, month } = data
-  const len = getMonthLength(year, month)
+  const len = getMonthLength(year, month) + 1
   let date = startValue
   let day = new Date(year, month, date).getDay()
   while (date < len) {
@@ -95,7 +95,7 @@ function* dateIterator(incrementor: TIncrementor, condition: TPredicate<IDate>, 
     day = (day + next - date) % 7
     date = next
   }
-  return date % len
+  return date % len + 1
 }
 function* hoursIterator(incrementor: TIncrementor, condition: TPredicate<IHours>, startValue: number, data: IDate | number) {
   if (isNumber(data)) {
@@ -133,7 +133,7 @@ export function buildIterator(start: Date, end: Date, constraints: IConstraints 
   const endDate = end.getDate()
   const endHour = end.getHours()
   const endMinute = end.getMinutes()
-  const condition = (date: IMinutes | number) => !isNumber(date) && (
+  const condition = (date: IMinutes) => (
     date.year < endYear || date.year === endYear && (
       date.month < endMonth || date.month === endMonth && (
         date.day < endDate || date.day === endDate && (
@@ -159,23 +159,31 @@ export function buildIterator(start: Date, end: Date, constraints: IConstraints 
   const hours = withConstraints(hoursIterator, hourConstraint)
   const minutes = withConstraints(minutesIterator, minuteConstraint)
 
-  return restrict<IMinutes | number>(
-    wrap<IHours | number, number, IMinutes>(
-      wrap<IDate | number, number, IHours>(
-        wrap<IMonths | number, number, IDate>(
-          wrap<IYears | number, number, IMonths>(
-            years(start.getFullYear(), {}),
-            months,
-            start.getMonth()
+  return restrictIterable<IMinutes>(
+    castIterableType(
+      wrapIterable<IHours | number, number, IMinutes>(
+        wrapIterable<IDate | number, number, IHours>(
+          wrapIterable<IMonths | number, number, IDate>(
+            wrapIterable<IYears | number, number, IMonths>(
+              years(start.getFullYear(), {}),
+              months,
+              start.getMonth()
+            ),
+            date,
+            start.getDate()
           ),
-          date,
-          start.getDate()
+          hours,
+          start.getHours()
         ),
-        hours,
-        start.getHours()
+        minutes,
+        start.getMinutes()
       ),
-      minutes,
-      start.getMinutes()
+      (arg) => {
+        if (!isNumber(arg)) {
+          return arg
+        }
+        throw typeError('IDateTime', arg)
+      }
     ),
     condition
   )

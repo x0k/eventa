@@ -1,6 +1,6 @@
 import { buildIterator } from '../iterator'
 
-import { generator } from '../generator'
+import { buildGenerator } from '../generator'
 
 import schedule from '../data/calculableSchedule.json'
 
@@ -212,7 +212,7 @@ test('Generate schedule', () => {
       step: 100
     }
   })
-  const gen = generator(rules, iterator)
+  const gen = buildGenerator(rules, iterator)
   const items = [...gen].filter(data => data.subject)
   expect(items).toEqual(expected)
 })

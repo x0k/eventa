@@ -1,4 +1,4 @@
-import { wrapIterable, restrictIterable, castIterableType } from 'iterator-wrapper'
+import { wrapIterable, restrictIterable, mapIterable } from 'iterator-wrapper'
 
 import { TExpression, TPredicate, IDictionary, isNumber, typeError } from '../utils'
 
@@ -160,7 +160,7 @@ export function buildIterator(start: Date, end: Date, constraints: IConstraints 
   const minutes = withConstraints(minutesIterator, minuteConstraint)
 
   return restrictIterable<IMinutes>(
-    castIterableType(
+    mapIterable(
       wrapIterable<IHours | number, number, IMinutes>(
         wrapIterable<IDate | number, number, IHours>(
           wrapIterable<IMonths | number, number, IDate>(

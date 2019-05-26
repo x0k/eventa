@@ -216,3 +216,15 @@ test('Generate schedule', () => {
   const items = [...gen].filter(data => data.subject)
   expect(items).toEqual(expected)
 })
+
+test('With selector', () => {
+  const { period: { start, end }, rules } = schedule
+  const iterator = buildIterator(new Date(start), new Date(end), {
+    minute: {
+      step: 100
+    }
+  })
+  const gen = buildGenerator(rules, iterator, (data) => data.teacher === 'Бабенко В.В.')
+  const items = [...gen].filter(data => data.subject)
+  expect(items).toEqual(expected.filter(({ teacher }) => teacher === 'Бабенко В.В.'))
+})

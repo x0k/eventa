@@ -1,4 +1,4 @@
-import { wrapIterable, restrictIterable, mapIterable } from 'iterator-wrapper'
+import { wrapIterable, restrictIterable, mapIterable, filterIterable } from 'iterator-wrapper'
 
 import { TExpression, TPredicate, IDictionary, isNumber, typeError } from '../utils'
 
@@ -37,33 +37,34 @@ function buildIncrementor(step: number | TExpression = 1): TIncrementor {
     : buildAction(step)
 }
 
-function buildCondition<T>(expression?: TExpression): TPredicate<T> {
-  return expression ? buildAction(expression) : () => true
+function buildCondition<T>(expression?: TExpression): TPredicate<T> | null {
+  return expression ? buildAction(expression) : null
 }
 
 type TIncrementor = (value: number) => number
 
-type TGenerator<T, R> = (incrementor: TIncrementor, condition: TPredicate<R>, value: number, data: T | number) => IterableIterator<number | R>
+type TGenerator<T, R> = (incrementor: TIncrementor, value: number, data: T | number) => IterableIterator<number | R>
 
 function withConstraints<T, R>(generator: TGenerator<T, R>, constraint: IConstraint = {}) {
   const { step, expression } = constraint
   const incrementor = buildIncrementor(step)
   const condition = buildCondition(expression)
-  return (value: number, data: T | number) => generator(incrementor, condition, value, data)
+  return (value: number, data: T | number) => {
+    const gen = generator(incrementor, value, data)
+    return condition ? filterIterable(gen, condition) : gen
+  }
 }
 
-function* yearsIterator(incrementor: TIncrementor, condition: TPredicate<IYears>, startValue: number) {
+function* yearsIterator(incrementor: TIncrementor, startValue: number) {
   let value = startValue
   while (true) {
     const result = { year: value }
-    if (condition(result)) {
-      yield result
-    }
+    yield result
     value = incrementor(value)
   }
 }
 
-function* monthsIterator(incrementor: TIncrementor, condition: TPredicate<IMonths>, startValue: number, data: IYears | number) {
+function* monthsIterator(incrementor: TIncrementor, startValue: number, data: IYears | number) {
   if (isNumber(data)) {
     throw new Error('Type error')
   }
@@ -71,14 +72,12 @@ function* monthsIterator(incrementor: TIncrementor, condition: TPredicate<IMonth
   let value = startValue
   while (value < 12) {
     const result = { month: value, year }
-    if (condition(result)) {
-      yield result
-    }
+    yield result
     value = incrementor(value)
   }
   return value % 12
 }
-function* dateIterator(incrementor: TIncrementor, condition: TPredicate<IDate>, startValue: number, data: IMonths | number) {
+function* dateIterator(incrementor: TIncrementor, startValue: number, data: IMonths | number) {
   if (isNumber(data)) {
     throw new Error('Type error')
   }
@@ -88,40 +87,34 @@ function* dateIterator(incrementor: TIncrementor, condition: TPredicate<IDate>, 
   let day = new Date(year, month, date).getDay()
   while (date < len) {
     const result = { day, date, month, year }
-    if (condition(result)) {
-      yield result
-    }
+    yield result
     const next = incrementor(date)
     day = (day + next - date) % 7
     date = next
   }
   return date % len + 1
 }
-function* hoursIterator(incrementor: TIncrementor, condition: TPredicate<IHours>, startValue: number, data: IDate | number) {
+function* hoursIterator(incrementor: TIncrementor, startValue: number, data: IDate | number) {
   if (isNumber(data)) {
     throw new Error('Type error')
   }
   let value = startValue
   while (value < 24) {
     const result = { hour: value, ...data }
-    if (condition(result)) {
-      yield result
-    }
+    yield result
     value = incrementor(value)
   }
   return value % 24
 }
 
-function* minutesIterator(incrementor: TIncrementor, condition: TPredicate<IMinutes>, startValue: number, data: IHours | number) {
+function* minutesIterator(incrementor: TIncrementor, startValue: number, data: IHours | number) {
   if (isNumber(data)) {
     throw new Error('Type error')
   }
   let value = startValue
   while (value < 60) {
     const result = { minute: value, ...data }
-    if (condition(result)) {
-      yield result
-    }
+    yield result
     value = incrementor(value)
   }
   return value % 60

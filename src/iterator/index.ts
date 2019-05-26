@@ -136,7 +136,7 @@ export function buildIterator(start: Date, end: Date, constraints: IConstraints 
   const condition = (date: IMinutes) => (
     date.year < endYear || date.year === endYear && (
       date.month < endMonth || date.month === endMonth && (
-        date.day < endDate || date.day === endDate && (
+        date.date < endDate || date.date === endDate && (
           date.hour < endHour || date.hour === endHour && (
             date.minute <= endMinute
           )

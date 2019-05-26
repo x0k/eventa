@@ -44,5 +44,5 @@ export function periodToArray<T> ({ start, end }: IPeriod<T>) {
 /** Errors **/
 
 export function typeError (expected: string, element: any) {
-  return new TypeError(`Expected ${expected}, but got ${typeof element}`)
+  return new TypeError(`Expected ${expected}, but got ${typeof element}: ${element}`)
 }

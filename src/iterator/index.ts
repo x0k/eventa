@@ -16,11 +16,12 @@ interface IMonths extends IYears {
   month: number
 }
 
-interface IDays extends IMonths {
+interface IDate extends IMonths {
+  date: number
   day: number
 }
 
-interface IHours extends IDays {
+interface IHours extends IDate {
   hour: number
 }
 
@@ -28,14 +29,7 @@ interface IMinutes extends IHours {
   minute: number
 }
 
-export interface IDateTime {
-  minute: number
-  hour: number
-  day: number
-  date: number
-  month: number
-  year: number
-}
+export { IMinutes as IDateTime }
 
 function buildIncrementor(step: number | TExpression = 1): TIncrementor {
   return isNumber(step)
@@ -84,23 +78,26 @@ function* monthsIterator(incrementor: TIncrementor, condition: TPredicate<IMonth
   }
   return value % 12
 }
-function* daysIterator(incrementor: TIncrementor, condition: TPredicate<IDays>, startValue: number, data: IMonths | number) {
+function* dateIterator(incrementor: TIncrementor, condition: TPredicate<IDate>, startValue: number, data: IMonths | number) {
   if (isNumber(data)) {
     throw new Error('Type error')
   }
   const { year, month } = data
   const len = getMonthLength(year, month)
-  let value = startValue
-  while (value < len) {
-    const result = { day: value, month, year }
+  let date = startValue
+  let day = new Date(year, month, date).getDay()
+  while (date < len) {
+    const result = { day, date, month, year }
     if (condition(result)) {
       yield result
     }
-    value = incrementor(value)
+    const next = incrementor(date)
+    day = (day + next - date) % 7
+    date = next
   }
-  return value % len
+  return date % len
 }
-function* hoursIterator(incrementor: TIncrementor, condition: TPredicate<IHours>, startValue: number, data: IDays | number) {
+function* hoursIterator(incrementor: TIncrementor, condition: TPredicate<IHours>, startValue: number, data: IDate | number) {
   if (isNumber(data)) {
     throw new Error('Type error')
   }
@@ -158,20 +155,20 @@ export function buildIterator(start: Date, end: Date, constraints: IConstraints 
 
   const years = withConstraints(yearsIterator, yearConstraint)
   const months = withConstraints(monthsIterator, monthConstraint)
-  const days = withConstraints(daysIterator, dateConstraint)
+  const date = withConstraints(dateIterator, dateConstraint)
   const hours = withConstraints(hoursIterator, hourConstraint)
   const minutes = withConstraints(minutesIterator, minuteConstraint)
 
   return restrict<IMinutes | number>(
     wrap<IHours | number, number, IMinutes>(
-      wrap<IDays | number, number, IHours>(
-        wrap<IMonths | number, number, IDays>(
+      wrap<IDate | number, number, IHours>(
+        wrap<IMonths | number, number, IDate>(
           wrap<IYears | number, number, IMonths>(
             years(start.getFullYear(), {}),
             months,
             start.getMonth()
           ),
-          days,
+          date,
           start.getDate()
         ),
         hours,

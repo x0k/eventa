@@ -13,8 +13,8 @@
     "typescript": "^3.4.5"
   },
   "dependencies": {
-    "iterator-wrapper": "^0.4.1",
-    "rule-interpreter": "0.5.3"
+    "iterator-wrapper": "~0.4",
+    "rule-interpreter": "~0.5"
   },
   "scripts": {
     "build": "rm -rf build && tsc",

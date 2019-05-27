@@ -2,31 +2,34 @@ import { wrapIterable, restrictIterable, mapIterable, filterIterable } from 'ite
 
 import { TExpression, TPredicate, IDictionary, isNumber, typeError } from '../utils'
 
-import { getMonthLength } from '../utils/dateTime'
+import * as H from '../utils/dateTime'
 
 import { IConstraint, IConstraints } from 'utils/schedule'
 
 import { buildAction } from '../actionBuilder'
 
+import { YEAR, MONTH, DATE, DAY, HOUR, MINUTE } from '../utils/schedule'
+
 interface IYears extends IDictionary<number> {
-  year: number
+  milliseconds: number
+  [YEAR]: number
 }
 
 interface IMonths extends IYears {
-  month: number
+  [MONTH]: number
 }
 
 interface IDate extends IMonths {
-  date: number
-  day: number
+  [DATE]: number
+  [DAY]: number
 }
 
 interface IHours extends IDate {
-  hour: number
+  [HOUR]: number
 }
 
 interface IMinutes extends IHours {
-  minute: number
+  [MINUTE]: number
 }
 
 export { IMinutes as IDateTime }
@@ -58,7 +61,7 @@ function withConstraints<T, R>(generator: TGenerator<T, R>, constraint: IConstra
 function* yearsIterator(incrementor: TIncrementor, startValue: number) {
   let value = startValue
   while (true) {
-    const result = { year: value }
+    const result = { year: value, milliseconds: new Date(value, 0).getTime() }
     yield result
     value = incrementor(value)
   }
@@ -71,7 +74,7 @@ function* monthsIterator(incrementor: TIncrementor, startValue: number, data: IY
   const { year } = data
   let value = startValue
   while (value < 12) {
-    const result = { month: value, year }
+    const result = { month: value, year, milliseconds: new Date(year, value).getTime() }
     yield result
     value = incrementor(value)
   }
@@ -81,15 +84,18 @@ function* dateIterator(incrementor: TIncrementor, startValue: number, data: IMon
   if (isNumber(data)) {
     throw new Error('Type error')
   }
-  const { year, month } = data
-  const len = getMonthLength(year, month) + 1
+  const { year, month, milliseconds } = data
+  const len = H.getMonthLength(year, month) + 1
   let date = startValue
   let day = new Date(year, month, date).getDay()
+  let ms = milliseconds
   while (date < len) {
-    const result = { day, date, month, year }
+    const result = { day, date, month, year, milliseconds: ms }
     yield result
     const next = incrementor(date)
-    day = (day + next - date) % 7
+    const diff = next - date
+    day = (day + diff) % 7
+    ms += diff * H.day
     date = next
   }
   return date % len + 1
@@ -98,11 +104,15 @@ function* hoursIterator(incrementor: TIncrementor, startValue: number, data: IDa
   if (isNumber(data)) {
     throw new Error('Type error')
   }
+  const { milliseconds } = data
   let value = startValue
+  let ms = milliseconds
   while (value < 24) {
-    const result = { hour: value, ...data }
+    const result = { hour: value, ...data, milliseconds: ms }
     yield result
-    value = incrementor(value)
+    const next = incrementor(value)
+    ms += (next - value) * H.hour
+    value = next
   }
   return value % 24
 }
@@ -111,11 +121,15 @@ function* minutesIterator(incrementor: TIncrementor, startValue: number, data: I
   if (isNumber(data)) {
     throw new Error('Type error')
   }
+  const { milliseconds } = data
   let value = startValue
+  let ms = milliseconds
   while (value < 60) {
-    const result = { minute: value, ...data }
+    const result = { minute: value, ...data, milliseconds: ms }
     yield result
-    value = incrementor(value)
+    const next = incrementor(value)
+    ms += (next - value) * H.minute
+    value = next
   }
   return value % 60
 }

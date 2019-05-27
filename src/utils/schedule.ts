@@ -5,12 +5,21 @@ export interface IConstraint {
   expression?: TExpression;
 }
 
+export const YEAR = 'year'
+export const MONTH = 'month'
+export const DATE = 'date'
+export const DAY = 'day'
+export const HOUR = 'hour'
+export const MINUTE = 'minute'
+
+export const DATE_PARTS = [ YEAR, MONTH, DATE, HOUR, MINUTE ]
+
 export interface IConstraints extends IDictionary<IConstraint | undefined> {
-  year?: IConstraint
-  month?: IConstraint
-  date?: IConstraint
-  hour?: IConstraint
-  minute?: IConstraint
+  [YEAR]?: IConstraint
+  [MONTH]?: IConstraint
+  [DATE]?: IConstraint
+  [HOUR]?: IConstraint
+  [MINUTE]?: IConstraint
 }
 
 export interface IRule {

@@ -39,7 +39,8 @@ const rules = [
 
 test('Simple expression', () => {
   const action = expression(rules)
-  const state = action({ minute: 0, hour: 18, day: 1, date: 6, month: 4, year: 2019 })
+  const milliseconds = new Date(2019, 4, 6, 18).getTime()
+  const state = action({ minute: 0, hour: 18, day: 1, date: 6, month: 4, year: 2019, milliseconds })
   expect(state).toEqual({
     minute: 0,
     hour: 18,

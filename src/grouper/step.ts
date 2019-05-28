@@ -1,4 +1,4 @@
-import { IConstraints, DATE_PARTS } from 'utils/schedule'
+import { IConstraints, DATE_PARTS } from '../utils/schedule'
 
 import * as H from '../utils/dateTime'
 

@@ -1,11 +1,10 @@
 import { reduceIterable } from 'iterator-wrapper'
 
-import { IConstraints } from 'utils/schedule'
-import { IPeriod } from 'utils'
+import { IDateTime } from '../iterator'
 
-import { IDateTime } from 'iterator'
-
-import * as H from 'utils/dateTime'
+import { IPeriod } from '../utils'
+import { IConstraints } from '../utils/schedule'
+import * as H from '../utils/dateTime'
 
 import { calcStepFromConstraints } from './step'
 
@@ -29,7 +28,12 @@ function reducer<T extends IDateTime> (merge: TMerge<T>) {
   }
 }
 
-export function grouper<T extends IDateTime> (iterable: IterableIterator<T>, constraints: IConstraints, separator: TSeparator<T>, merge: TMerge<T> = val => val) {
+export function grouper<T extends IDateTime> (
+  iterable: IterableIterator<T>,
+  constraints: IConstraints,
+  separator: TSeparator<T>,
+  merge: TMerge<T> = val => val
+) {
   const step = calcStepFromConstraints(constraints) || H.minute
   return reduceIterable(iterable, separator(step), reducer(merge), { period: { start: 0, end: 0 } })
 }

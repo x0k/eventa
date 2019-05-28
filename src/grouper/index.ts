@@ -14,9 +14,9 @@ export interface IGroupedEvent<T extends IDateTime> {
   value?: T
 }
 
-type TSeparator<T extends IDateTime> = (step: number) => (previous: IGroupedEvent<T>, current: T) => boolean
+export type TSeparator<T extends IDateTime> = (step: number) => (previous: IGroupedEvent<T>, current: T, index: number) => boolean
 
-type TMerge<T extends IDateTime> = (previous: T, current: T) => T
+export type TMerge<T extends IDateTime> = (previous: T, current: T) => T
 
 function reducer<T extends IDateTime> (merge: TMerge<T>) {
   return ({ period: { start }, value }: IGroupedEvent<T>, current: T) => {
@@ -29,7 +29,7 @@ function reducer<T extends IDateTime> (merge: TMerge<T>) {
   }
 }
 
-export function grouper<T extends IDateTime> (iterable: IterableIterator<T>, constraints: IConstraints, separator: TSeparator<T>, merge: TMerge<T>) {
+export function grouper<T extends IDateTime> (iterable: IterableIterator<T>, constraints: IConstraints, separator: TSeparator<T>, merge: TMerge<T> = val => val) {
   const step = calcStepFromConstraints(constraints) || H.minute
   return reduceIterable(iterable, separator(step), reducer(merge), { period: { start: 0, end: 0 } })
 }

@@ -11,11 +11,11 @@ import { buildAction } from '../actionBuilder'
 import { YEAR, MONTH, DATE, DAY, HOUR, MINUTE } from '../utils/schedule'
 
 interface IYears extends IDictionary<number> {
-  milliseconds: number
   [YEAR]: number
 }
 
 interface IMonths extends IYears {
+  milliseconds: number
   [MONTH]: number
 }
 
@@ -61,7 +61,7 @@ function withConstraints<T, R>(generator: TGenerator<T, R>, constraint: IConstra
 function* yearsIterator(incrementor: TIncrementor, startValue: number) {
   let value = startValue
   while (true) {
-    const result = { year: value, milliseconds: new Date(value, 0).getTime() }
+    const result = { year: value }
     yield result
     value = incrementor(value)
   }

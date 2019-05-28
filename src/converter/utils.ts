@@ -4,7 +4,7 @@ import {
   TOption,
   TValue,
   TExpression
-} from 'utils'
+} from '../utils'
 
 export type TDateTimeOption = number | number[]
 

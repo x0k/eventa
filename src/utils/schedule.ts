@@ -1,4 +1,4 @@
-import { TExpression, IPeriod, IDictionary } from 'utils'
+import { TExpression, IPeriod, IDictionary } from '../utils'
 
 export interface IConstraint {
   step?: number | TExpression;

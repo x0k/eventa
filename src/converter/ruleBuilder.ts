@@ -1,9 +1,9 @@
 import {
   TValue,
   TExpression
-} from 'utils'
+} from '../utils'
 
-import { IRule } from 'utils/schedule'
+import { IRule } from '../utils/schedule'
 
 import { IEvent, addCondition } from './utils'
 

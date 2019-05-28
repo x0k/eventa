@@ -2,9 +2,7 @@ import { buildAction } from '../actionBuilder'
 
 import { IDateTime } from '../iterator'
 
-import { IDictionary } from 'utils'
-
-import { IRule } from 'utils/schedule'
+import { IRule } from '../utils/schedule'
 
 function order (rules: IRule[]): IRule[] {
   const order: IRule[] = []
@@ -44,11 +42,11 @@ function build ({ id, expression }: IRule) {
   return { id, action: buildAction(expression) }
 }
 
-export function expression (rules: IRule[]) {
+export function expression<T extends IDateTime> (rules: IRule[]) {
   const rulesOrder = order(rules)
   const expressions = rulesOrder.map(build)
-  return (data: IDateTime) => expressions.reduce((acc: IDictionary<any>, { id, action }) => {
+  return (data: IDateTime) => expressions.reduce((acc: IDateTime, { id, action }) => {
     acc[id] = action(acc)
     return acc
-  }, data)
+  }, data) as T
 }

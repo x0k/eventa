@@ -1,16 +1,14 @@
 import { wrapIterable, restrictIterable, mapIterable, filterIterable } from 'iterator-wrapper'
 
-import { TExpression, TPredicate, IDictionary, isNumber, typeError } from '../utils'
+import { buildAction } from '../actionBuilder'
+
+import { TExpression, TPredicate, IDictionary, isNumber, typeError, TValue } from '../utils'
+
+import { IConstraint, IConstraints, YEAR, MONTH, DATE, DAY, HOUR, MINUTE } from '../utils/schedule'
 
 import * as H from '../utils/dateTime'
 
-import { IConstraint, IConstraints } from 'utils/schedule'
-
-import { buildAction } from '../actionBuilder'
-
-import { YEAR, MONTH, DATE, DAY, HOUR, MINUTE } from '../utils/schedule'
-
-interface IYears extends IDictionary<number> {
+interface IYears extends IDictionary<TValue> {
   [YEAR]: number
 }
 
@@ -195,3 +193,5 @@ export function buildIterator(start: Date, end: Date, constraints: IConstraints 
     condition
   )
 }
+
+export { IConstraints }

@@ -1,4 +1,4 @@
-import { IRule } from 'utils/schedule';
+import { IRule } from '../../utils/schedule';
 
 import { IEvent } from '../utils'
 

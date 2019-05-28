@@ -1,7 +1,7 @@
 import {
   IConstraints,
   ISchedule as ICalculableSchedule,
-} from 'utils/schedule'
+} from '../utils/schedule'
 
 import { ISchedule } from './utils'
 
@@ -21,3 +21,5 @@ export function convert ({ name, period, fields, events, rules }: ISchedule): IC
     rules: rules.concat(fieldsRules)
   }
 }
+
+export { ISchedule }

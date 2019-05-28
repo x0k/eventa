@@ -1,6 +1,6 @@
 import { buildActionsBuilder } from 'rule-interpreter'
 
-import { TExpression, TAction } from 'utils'
+import { TExpression, TAction } from '../utils'
 
 import { operations } from './operations'
 

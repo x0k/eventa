@@ -2,21 +2,31 @@ import { filterIterable } from 'iterator-wrapper'
 
 import { IDateTime } from '../iterator'
 
-import { IDictionary } from 'utils'
-import { IRule } from 'utils/schedule'
+import { TPredicate } from '../utils'
+
+import { IRule } from '../utils/schedule'
 
 import { expression } from './expression'
 
-type TAction = (data: IDateTime) => IDictionary<any>
+type TAction<T extends IDateTime> = (data: IDateTime) => T
 
-function * generator (action: TAction, dateTime: IterableIterator<IDateTime>) {
+function * generator<T extends IDateTime> (
+  action: TAction<T>,
+  dateTime: IterableIterator<IDateTime>
+): IterableIterator<T> {
   for (const date of dateTime) {
     yield action(date)
   }
 }
 
-export function buildGenerator (rules: IRule[], dateTime: IterableIterator<IDateTime>, selector?: (value: IDictionary<any>) => boolean) {
-  const action = expression(rules)
-  const gen = generator(action, dateTime)
+export function buildGenerator<T extends IDateTime> (
+  rules: IRule[],
+  dateTime: IterableIterator<IDateTime>,
+  selector?: TPredicate<T>
+): IterableIterator<T> {
+  const action = expression<T>(rules)
+  const gen = generator<T>(action, dateTime)
   return selector ? filterIterable(gen, selector) : gen
 }
+
+export { TPredicate, IRule }

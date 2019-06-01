@@ -18,7 +18,7 @@ export function convert ({ name, period, fields, events, rules }: ISchedule): IC
     name,
     period,
     constraints,
-    rules: rules.concat(fieldsRules)
+    rules: rules ? rules.concat(fieldsRules) : fieldsRules
   }
 }
 

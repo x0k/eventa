@@ -47,7 +47,7 @@ export interface ISchedule {
   period: TDateTimePeriod
   fields: string[]
   events: IEvent[]
-  rules: IRule[]
+  rules?: IRule[]
 }
 
 export function addCondition (relation: string, expression: TExpression, condition: TExpression) {

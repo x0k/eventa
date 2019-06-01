@@ -20,8 +20,8 @@
     "build": "rm -rf build && tsc",
     "test": "jest",
     "lint": "eslint src/*.ts",
-    "prepare": "build",
-    "prepublishOnly": "test && lint"
+    "prepare": "npm run-script build",
+    "prepublishOnly": "npm run-script test && npm run-script lint"
   },
   "main": "build/index.js",
   "types": "build/index.d.ts",

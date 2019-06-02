@@ -161,9 +161,6 @@ test('Should group events', () => {
 
   function separator<T extends IDateTime> (step: number) {
     return ({ value }: IGroupedEvent<T>, current: T) => {
-      if (!value) {
-        return true
-      }
       const { subject, type, teacher, room, call } = value
       return subject === current.subject &&
         type === current.type &&

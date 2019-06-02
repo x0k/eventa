@@ -62,12 +62,8 @@ test('Should work', () => {
   const gen = buildGenerator(rules, period, selector)
   
   function separator<T extends IDateTime> (step: number) {
-    return ({ value, period: { end } }: IGroupedEvent<T>, current: T) => {
-      if (!value) {
-        return true
-      }
-      return value.name === current.name && (end + step === current.milliseconds)
-    }
+    return ({ value, period: { end } }: IGroupedEvent<T>, current: T) =>
+      value.name === current.name && (end + step === current.milliseconds)
   }
   
   const events = grouper(gen, constraints, separator)

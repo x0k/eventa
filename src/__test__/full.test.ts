@@ -10,27 +10,19 @@ import {
 const eventsData = [
   {
     value: {
-      minute: 0,
-      hour: 1,
-      day: 6,
-      date: 1,
-      month: 0,
-      year: 2000,
-      milliseconds: 946677600000,
-      name: 'event1'
+      "date": 1,
+      "dateMilliseconds": 946674000000, "day": 6, "hour": 1,
+      "hourMilliseconds": 946677600000, "milliseconds": 946677600000, "minute": 0, "month": 0,
+      "monthMilliseconds": 946674000000, "name": "event1", "year": 2000,
     },
     period: { start: 946677600000, end: 946684740000 }
   },
   {
     value: {
-      minute: 0,
-      hour: 12,
-      day: 6,
-      date: 1,
-      month: 0,
-      year: 2000,
-      milliseconds: 946717200000,
-      name: 'event1'
+      "date": 1,
+      "dateMilliseconds": 946674000000, "day": 6, "hour": 12,
+      "hourMilliseconds": 946717200000, "milliseconds": 946717200000, "minute": 0, "month": 0,
+      "monthMilliseconds": 946674000000, "name": "event1", "year": 2000,
     },
     period: { start: 946717200000, end: 946724340000 }
   }

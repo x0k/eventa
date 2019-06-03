@@ -1,6 +1,6 @@
 {
   "name": "eventa",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "x0k <x0kill@ya.ru>",
   "license": "MIT",
   "devDependencies": {
@@ -13,15 +13,15 @@
     "typescript": "^3.4.5"
   },
   "dependencies": {
-    "iterator-wrapper": "0.6.4",
+    "iterator-wrapper": "1.0",
     "rule-interpreter": "~0.5"
   },
   "scripts": {
     "build": "rm -rf build && tsc",
     "test": "jest",
     "lint": "eslint src/*.ts",
-    "prepare": "build",
-    "prepublishOnly": "test && lint"
+    "prepare": "npm run-script build",
+    "prepublishOnly": "npm run-script test && npm run-script lint"
   },
   "main": "build/index.js",
   "types": "build/index.d.ts",

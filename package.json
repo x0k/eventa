@@ -1,31 +1,7 @@
 {
-  "name": "eventa",
-  "version": "1.0.1",
-  "author": "x0k <x0kill@ya.ru>",
-  "license": "MIT",
-  "devDependencies": {
-    "@types/jest": "^24.0.12",
-    "@typescript-eslint/eslint-plugin": "^1.7.0",
-    "@typescript-eslint/parser": "^1.7.0",
-    "eslint": "^5.16.0",
-    "jest": "^24.7.1",
-    "ts-jest": "^24.0.2",
-    "typescript": "^3.4.5"
-  },
-  "dependencies": {
-    "iterator-wrapper": "1.0",
-    "rule-interpreter": "~0.5"
-  },
+  "private": true,
+  "workspaces": ["packages/*"],
   "scripts": {
-    "build": "rm -rf build && tsc",
-    "test": "jest",
-    "lint": "eslint src/*.ts",
-    "prepare": "npm run-script build",
-    "prepublishOnly": "npm run-script test && npm run-script lint"
-  },
-  "main": "build/index.js",
-  "types": "build/index.d.ts",
-  "files": [
-    "build/**/*"
-  ]
+    "start": "cd packages/app && yarn start"
+  }
 }
